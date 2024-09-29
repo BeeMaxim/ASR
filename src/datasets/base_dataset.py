@@ -6,6 +6,8 @@ import torch
 import torchaudio
 from torch.utils.data import Dataset
 
+import librosa
+
 from src.text_encoder import CTCTextEncoder
 
 logger = logging.getLogger(__name__)
@@ -125,7 +127,7 @@ class BaseDataset(Dataset):
         Returns:
             spectrogram (Tensor): spectrogram for the audio.
         """
-        return self.instance_transforms["get_spectrogram"](audio)
+        return torch.from_numpy(librosa.power_to_db(self.instance_transforms["get_spectrogram"](audio)))
 
     def preprocess_data(self, instance_data):
         """

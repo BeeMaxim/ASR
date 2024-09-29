@@ -7,6 +7,38 @@ from src.metrics.tracker import MetricTracker
 from src.metrics.utils import calc_cer, calc_wer
 from src.trainer.base_trainer import BaseTrainer
 
+import torch
+import matplotlib.pyplot as plt
+import PIL
+from torchvision.transforms import ToTensor
+import io
+import torchaudio.transforms as T
+
+# DELETE THIS
+def plot_waveform(waveform, sr, title="Waveform", ax=None):
+    waveform = waveform.numpy()
+
+    num_channels, num_frames = waveform.shape
+    time_axis = torch.arange(0, num_frames) / sr
+
+    if ax is None:
+        _, ax = plt.subplots(num_channels, 1)
+    ax.plot(time_axis, waveform[0], linewidth=1)
+    ax.grid(True)
+    ax.set_xlim([0, time_axis[-1]])
+    ax.set_title(title)
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+
+    # convert buffer to Tensor
+    image = ToTensor()(PIL.Image.open(buf))
+
+    plt.close()
+
+    return image
+
 
 class Trainer(BaseTrainer):
     """
@@ -41,7 +73,10 @@ class Trainer(BaseTrainer):
             self.optimizer.zero_grad()
 
         outputs = self.model(**batch)
+        print('OUTPUTS')
+        print(outputs['log_probs'].shape)
         batch.update(outputs)
+        print(batch.keys())
 
         all_losses = self.criterion(**batch)
         batch.update(all_losses)
@@ -78,9 +113,15 @@ class Trainer(BaseTrainer):
 
         # logging scheme might be different for different partitions
         if mode == "train":  # the method is called only every self.log_step steps
-            self.log_spectrogram(**batch)
+            pass
+            # self.log_spectrogram(**batch)
         else:
             # Log Stuff
+            # image = plot_waveform(batch['audio'], 16000, title="Original waveform")
+            # self.writer.add_image("audio", image)
+            # spectrogram = T.MelSpectrogram(n_fft=512)
+            # spec = spectrogram(batch['audio'])
+            # self.log_spectrogram(spec)
             self.log_spectrogram(**batch)
             self.log_predictions(**batch)
 
