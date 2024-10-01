@@ -30,10 +30,10 @@ class DeepSpeech2(nn.Module):
             nn.ReLU(),
         )
 
-        self.rnn = nn.RNN(input_size=16 * 96, hidden_size=16 * 96, num_layers=4, batch_first=True)
+        self.rnn = nn.GRU(input_size=16 * 96, hidden_size=512, num_layers=2, batch_first=True)
 
         self.head = Sequential(
-            nn.Linear(in_features=16 * 96, out_features=n_tokens),
+            nn.Linear(in_features=512, out_features=n_tokens),
         )
 
     def forward(self, spectrogram, spectrogram_length, **batch):
@@ -48,18 +48,18 @@ class DeepSpeech2(nn.Module):
                 transformed lengths.
         """
         # print(spectrogram.transpose(1, 2).shape)
-        print('SQQUEEEEEEEEEEEEEEEEEEEEEEEZE')
-        print(spectrogram.transpose(1, 2).unsqueeze(1).shape)
+        # print('SQQUEEEEEEEEEEEEEEEEEEEEEEEZE')
+        # print(spectrogram.transpose(1, 2).unsqueeze(1).shape)
         output = self.net(spectrogram.transpose(1, 2).unsqueeze(1)).transpose(1, 2).reshape(spectrogram.shape[0], -1, 16 * 96)
-        print(output.shape)
+        # print(output.shape)
 
         output = self.rnn(output)[0]
-        print(output.shape)
+        # print(output.shape)
 
         output = self.head(output)
-        print(output.shape)
+        # print(output.shape)
 
-        print(output[:, :10, :])
+        # print(output[:, :10, :])
 
         log_probs = nn.functional.log_softmax(output, dim=-1)
         log_probs_length = self.transform_input_lengths(spectrogram_length)

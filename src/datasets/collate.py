@@ -15,20 +15,20 @@ def collate_fn(dataset_items: list[dict]):
         result_batch (dict[Tensor]): dict, containing batch-version
             of the tensors.
     """
-    max_lens = {'audio_len': 0, 'spectrogram_len': 0, 'text_len': 0, 'text_encoded_len': 0, 'audio_path_len': 0}
+    # max_lens = {'audio_len': 0, 'spectrogram_len': 0, 'text_len': 0, 'text_encoded_len': 0, 'audio_path_len': 0}
     # print('CCOLLATE!!!')
+    '''
     for item in dataset_items:
-        '''
         print(item['audio'].shape)
         print(item['spectrogram'].shape)
-        print(item['text_encoded'].shape)'''
+        print(item['text_encoded'].shape)
         max_lens['audio_len'] = max(max_lens['audio_len'], item['audio'].shape[1])
         max_lens['spectrogram_len'] = max(max_lens['spectrogram_len'], item['spectrogram'].shape[2])
         max_lens['text_len'] = max(max_lens['text_len'], len(item['text']))
         max_lens['text_encoded_len'] = max(max_lens['text_encoded_len'], item['text_encoded'].shape[1])
         max_lens['audio_path_len'] = max(max_lens['audio_path_len'], len(item['audio_path']))
+        '''
     # print(max_lens)
-
     result = {}
     result['spectrogram']  = pad_sequence([x['spectrogram'].permute(2, 1, 0).squeeze(2) for x in dataset_items]).permute(1, 2, 0)
     result['text_encoded'] = pad_sequence([x['text_encoded'].squeeze(0) for x in dataset_items]).permute(1, 0)

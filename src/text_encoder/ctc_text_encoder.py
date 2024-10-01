@@ -65,8 +65,8 @@ class CTCTextEncoder:
             if token != last and token != self.EMPTY_TOK:
                 tokens.append(token)
             last = token
-        print('inds!!!')
-        print(self.decode(tokens))
+        #print('inds!!!')
+        #print(self.decode(tokens))
         return self.decode(tokens)
 
     @staticmethod

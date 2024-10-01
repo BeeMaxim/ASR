@@ -21,15 +21,15 @@ class ArgmaxCERMetric(BaseMetric):
     ):
         cers = []
         predictions = torch.argmax(log_probs.cpu(), dim=-1).numpy()
-        print('HAHAHA')
-        print(predictions.shape)
+        #print('HAHAHA')
+        #print(predictions.shape)
         lengths = log_probs_length.detach().numpy()
-        print(lengths)
+        #print(lengths)
         for log_prob_vec, length, target_text in zip(predictions, lengths, text):
             target_text = self.text_encoder.normalize_text(target_text)
             pred_text = self.text_encoder.ctc_decode(log_prob_vec[:length])
-            print("WTF!!!")
-            print(target_text)
-            print(pred_text)
+            #print("WTF!!!")
+            #print(target_text)
+            #print(pred_text)
             cers.append(calc_cer(target_text, pred_text))
         return sum(cers) / len(cers)

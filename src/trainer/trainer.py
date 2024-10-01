@@ -73,10 +73,10 @@ class Trainer(BaseTrainer):
             self.optimizer.zero_grad()
 
         outputs = self.model(**batch)
-        print('OUTPUTS')
-        print(outputs['log_probs'].shape)
+        #print('OUTPUTS')
+        #print(outputs['log_probs'].shape)
         batch.update(outputs)
-        print(batch.keys())
+        #print(batch.keys())
 
         all_losses = self.criterion(**batch)
         batch.update(all_losses)
@@ -122,7 +122,7 @@ class Trainer(BaseTrainer):
             # spectrogram = T.MelSpectrogram(n_fft=512)
             # spec = spectrogram(batch['audio'])
             # self.log_spectrogram(spec)
-            self.log_spectrogram(**batch)
+            # self.log_spectrogram(**batch)
             self.log_predictions(**batch)
 
     def log_spectrogram(self, spectrogram, **batch):
