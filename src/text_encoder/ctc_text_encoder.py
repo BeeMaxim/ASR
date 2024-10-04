@@ -1,7 +1,10 @@
 import re
 from string import ascii_lowercase
 
+from collections import defaultdict
+
 import torch
+from torchaudio.models.decoder import ctc_decoder
 
 # TODO add CTC decode
 # TODO add BPE, LM, Beam Search support
@@ -57,10 +60,46 @@ class CTCTextEncoder:
             raw_text (str): raw text with empty tokens and repetitions.
         """
         return "".join([self.ind2char[int(ind)] for ind in inds]).strip()
+    
+    def expand_and_merge(self, dp, probs):
+        new_dp = defaultdict(float)
+        for ind, next_token_prob in enumerate(probs):
+            cur = self.ind2char[ind]
+            for (prefix, last_char), v in dp.items():
+                if last_char == cur:
+                    new_prefix = prefix
+                else:
+                    if cur != self.EMPTY_TOK:
+                        new_prefix = prefix + cur
+                    else:
+                        new_prefix = prefix
+                new_dp[(new_prefix, cur)] += v * next_token_prob
+        return new_dp
+    
+    def truncate_paths(self, dp, beam_size):
+        return dict(sorted(list(dp.items()), key=lambda x: -x[1])[:beam_size])
 
-    def ctc_decode(self, inds) -> str:
+    def ctc_decode(self, log_probs, beam_search=False) -> str:
+        if beam_search:
+            dp = {
+                ('', self.EMPTY_TOK): 1.0
+            }
+            for prob in log_probs.cpu().exp().numpy():
+                dp = self.expand_and_merge(dp, prob)
+                dp = self.truncate_paths(dp, 25)
+                # print(dp)
+            # print(self.truncate_paths(dp, 1))
+            return list(self.truncate_paths(dp, 1).keys())[0][0]
+            
+            #decoder = ctc_decoder(lexicon=None, tokens=self.vocab, beam_size=50, blank_token='', sil_token='z')
+            # result = decoder(log_probs.unsqueeze(0).cpu())[0][0]
+            
+            # print(result.tokens)
+
+            # return self.decode(result.tokens)
         last = -1
         tokens = []
+        inds = torch.argmax(log_probs.cpu(), dim=-1).numpy()
         for token in inds:
             if token != last and token != self.EMPTY_TOK:
                 tokens.append(token)

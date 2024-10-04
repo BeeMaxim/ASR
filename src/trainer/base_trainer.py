@@ -126,6 +126,8 @@ class BaseTrainer:
             *[m.name for m in self.metrics["train"]],
             writer=self.writer,
         )
+        print(*self.config.writer.loss_names)
+        print(*[m.name for m in self.metrics["inference"]])
         self.evaluation_metrics = MetricTracker(
             *self.config.writer.loss_names,
             *[m.name for m in self.metrics["inference"]],

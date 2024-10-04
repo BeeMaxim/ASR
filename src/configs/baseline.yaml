@@ -8,10 +8,10 @@ defaults:
   - _self_
 optimizer:
   _target_: torch.optim.AdamW
-  lr: 1e-3
+  lr: 1e-4
 lr_scheduler:
   _target_: torch.optim.lr_scheduler.OneCycleLR
-  max_lr: 3e-3
+  max_lr: 5e-4
   pct_start: 0.1
   steps_per_epoch: ${trainer.epoch_len}
   epochs: ${trainer.n_epochs}
@@ -22,10 +22,10 @@ text_encoder:
   _target_: src.text_encoder.CTCTextEncoder
 trainer:
   log_step: 100
-  n_epochs: 500
+  n_epochs: 15
   epoch_len: null
   device_tensors: ["spectrogram", "text_encoded"] # which tensors should be on device (ex. GPU)
-  resume_from: null # null or path to the checkpoint dir with *.pth and config.yaml
+  resume_from: D:\ASR\saved\beam-search-test\model_best.pth # null or path to the checkpoint dir with *.pth and config.yaml
   device: auto # device name or "auto"
   override: True # if True, will override the previous run with the same name
   monitor: "min val_WER_(Argmax)" # "off" or "max/min metric_name", i.e. our goal is to maximize/minimize metric

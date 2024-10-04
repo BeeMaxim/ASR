@@ -1,12 +1,16 @@
+#train:
+#  _target_: src.datasets.LibrispeechDataset
+#  part: "train-clean-360"
+#  instance_transforms: ${transforms.instance_transforms.train}
 train:
-  _target_: src.datasets.LibrispeechDataset
-  part: "train-clean-100"
-  instance_transforms: ${transforms.instance_transforms.train}
+  _target_: src.datasets.CommonVoiceDataset
+  split: "train"
+  instance_transforms: ${transforms.instance_transforms.inference}
 val:
   _target_: src.datasets.LibrispeechDataset
-  part: "dev-clean"
+  part: "test-clean"
   instance_transforms: ${transforms.instance_transforms.inference}
 test:
   _target_: src.datasets.LibrispeechDataset
-  part: "test-clean"
+  part: "test-other"
   instance_transforms: ${transforms.instance_transforms.inference}

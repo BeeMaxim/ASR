@@ -93,6 +93,7 @@ class Trainer(BaseTrainer):
             metrics.update(loss_name, batch[loss_name].item())
 
         for met in metric_funcs:
+            # print(met.name)
             metrics.update(met.name, met(**batch))
         return batch
 
@@ -139,10 +140,12 @@ class Trainer(BaseTrainer):
 
         argmax_inds = log_probs.cpu().argmax(-1).numpy()
         argmax_inds = [
-            inds[: int(ind_len)]
-            for inds, ind_len in zip(argmax_inds, log_probs_length.numpy())
+            inds[: int(ind_len), :]
+            for inds, ind_len in zip(log_probs.cpu(), log_probs_length.numpy())
         ]
-        argmax_texts_raw = [self.text_encoder.decode(inds) for inds in argmax_inds]
+        # print(argmax_inds.shape)
+        # print(log_probs.shape)
+        argmax_texts_raw = [self.text_encoder.decode(inds.argmax(-1).numpy()) for inds in argmax_inds]
         argmax_texts = [self.text_encoder.ctc_decode(inds) for inds in argmax_inds]
         tuples = list(zip(argmax_texts, text, argmax_texts_raw, audio_path))
 

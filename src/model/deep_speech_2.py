@@ -19,21 +19,29 @@ class DeepSpeech2(nn.Module):
         self.net = Sequential(
             nn.Conv2d(1, 32, (11, 41), stride=(2, 2), padding=(5, 20), bias=False),
             nn.BatchNorm2d(32),
+            nn.Dropout2d(0.1),
             nn.ReLU(),
 
             nn.Conv2d(32, 32, (11, 21), stride=(1, 2), padding=(5, 10), bias=False),
             nn.BatchNorm2d(32),
+            nn.Dropout2d(0.1),
             nn.ReLU(),
 
             nn.Conv2d(32, 96, (11, 21), stride=(1, 2), padding=(5, 10), bias=False),
             nn.BatchNorm2d(96),
+            nn.Dropout2d(0.1),
             nn.ReLU(),
         )
 
-        self.rnn = nn.GRU(input_size=16 * 96, hidden_size=512, num_layers=2, batch_first=True)
+        self.lin = nn.Sequential(
+            nn.Linear(in_features=16 * 96, out_features=512),
+            nn.ReLU(),
+        )
+
+        self.rnn = nn.GRU(input_size=512, hidden_size=512, num_layers=5, bidirectional=False, dropout=0.1, batch_first=True)
 
         self.head = Sequential(
-            nn.Linear(in_features=512, out_features=n_tokens),
+            nn.Linear(in_features=1 * 512, out_features=n_tokens),
         )
 
     def forward(self, spectrogram, spectrogram_length, **batch):
@@ -52,6 +60,8 @@ class DeepSpeech2(nn.Module):
         # print(spectrogram.transpose(1, 2).unsqueeze(1).shape)
         output = self.net(spectrogram.transpose(1, 2).unsqueeze(1)).transpose(1, 2).reshape(spectrogram.shape[0], -1, 16 * 96)
         # print(output.shape)
+
+        output = self.lin(output)
 
         output = self.rnn(output)[0]
         # print(output.shape)
