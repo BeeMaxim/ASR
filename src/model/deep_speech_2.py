@@ -38,10 +38,10 @@ class DeepSpeech2(nn.Module):
             nn.ReLU(),
         )
 
-        self.rnn = nn.GRU(input_size=512, hidden_size=512, num_layers=5, bidirectional=False, dropout=0.1, batch_first=True)
+        self.rnn = nn.GRU(input_size=512, hidden_size=512, num_layers=5, bidirectional=True, dropout=0.1, batch_first=True)
 
         self.head = Sequential(
-            nn.Linear(in_features=1 * 512, out_features=n_tokens),
+            nn.Linear(in_features=2 * 512, out_features=n_tokens),
         )
 
     def forward(self, spectrogram, spectrogram_length, **batch):

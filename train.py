@@ -24,7 +24,7 @@ def main(config):
     """
     set_random_seed(config.trainer.seed)
     print(torch.cuda.is_available())
-    print(torch.cuda.get_device_name())
+    # print(torch.cuda.get_device_name())
 
     project_config = OmegaConf.to_container(config)
     logger = setup_saving_and_logging(config)

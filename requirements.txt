@@ -19,3 +19,4 @@ flashlight-text
 black
 isort
 pre-commit
+kenLM
