@@ -39,6 +39,8 @@ class CTCTextEncoder:
         self.ind2char = dict(enumerate(self.vocab))
         self.char2ind = {v: k for k, v in self.ind2char.items()}
 
+        self.lm_model = download_pretrained_files("librispeech-4-gram").lm
+
         print('before lm')
         # self.lm_files = download_pretrained_files("librispeech-3-gram")
         print('after lm')
@@ -92,40 +94,53 @@ class CTCTextEncoder:
     def truncate_paths(self, dp, beam_size, lm=False, lm_model=None):
         # print(dp.items())
         if lm:
+            for i in dp:
+                print(i, 10**lm_model.score(i[0]))
             return dict(sorted(list(dp.items()), key=lambda x: -x[1] - self.lm_weight * 10**(lm_model.score(x[0][0])))[:beam_size])
         return dict(sorted(list(dp.items()), key=lambda x: -x[1])[:beam_size])
 
     def ctc_decode(self, log_probs, beam_search=False, lm=False, lm_model=None) -> str:
         if beam_search:
             # lm_model = None
-            if False:
-                lm_files = download_pretrained_files("librispeech-4-gram")
-                lm_model = kenlm.Model(lm_files.lm)
-                '''
+            if lm:
+                #lm_files = download_pretrained_files("librispeech-4-gram")
+                #m_model = kenlm.Model(lm_files.lm)
+                # print(self.vocab)
+                
                 beam_search_decoder = ctc_decoder(
-                    lexicon=lm_files.lexicon,
-                    tokens=self.alphabet + [self.EMPTY_TOK] + ['|'] + ["'"],
-                    lm=lm_files.lm,
-                    nbest=3,
-                    beam_size=15,
-                    blank_token=self.EMPTY_TOK
+                    lexicon=None,
+                    tokens=self.vocab,
+                    lm=self.lm_model,
+                    beam_size_token=None,
+                    beam_threshold=500000,
+                    nbest=5,
+                    beam_size=25,
+                    sil_token=' ',
+                    blank_token=self.EMPTY_TOK,
+                    log_add=True
                 )
 
-                print('decoder created')
+                #print('decoder created')
+                #print(log_probs.unsqueeze(0).shape)
                 print(log_probs.unsqueeze(0).shape)
                 res = beam_search_decoder(log_probs.unsqueeze(0))
+                #print(res)
+                print(beam_search_decoder.idxs_to_tokens(res[0][0].tokens))
                 print(res)
-                return self.decode(res[0][0].tokens)'''
+                print(self.decode(res[0][0].tokens))
+                return self.decode(res[0][0].tokens)
                 
             dp = {
                 ('', self.EMPTY_TOK): 1.0
             }
             for prob in log_probs.cpu().exp().numpy():
                 dp = self.expand_and_merge(dp, prob)
-                dp = self.truncate_paths(dp, 25, lm, lm_model)
+                dp = self.truncate_paths(dp, 25, False, lm_model)
+                # print(dp)
                 # print(dp)
             # print(self.truncate_paths(dp, 1))
             # print(dp)
+            print('beam-search', list(self.truncate_paths(dp, 1, lm, lm_model).keys())[0][0])
             return list(self.truncate_paths(dp, 1, lm, lm_model).keys())[0][0]
             
             #decoder = ctc_decoder(lexicon=None, tokens=self.vocab, beam_size=50, blank_token='', sil_token='z')
@@ -143,6 +158,7 @@ class CTCTextEncoder:
             last = token
         #print('inds!!!')
         #print(self.decode(tokens))
+        print('val!', tokens, self.decode(tokens))
         return self.decode(tokens)
 
     @staticmethod
