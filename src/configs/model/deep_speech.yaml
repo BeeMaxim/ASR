@@ -1,3 +1,2 @@
 _target_: src.model.DeepSpeech2
-n_feats: 128
-fc_hidden: 512
+dropout: 0.1

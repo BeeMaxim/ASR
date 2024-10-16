@@ -3,11 +3,8 @@ from torch.nn import Sequential
 
 
 class DeepSpeech2(nn.Module):
-    """
-    Simple MLP
-    """
 
-    def __init__(self, n_feats, n_tokens, fc_hidden=512, dropout=0.0):
+    def __init__(self, n_tokens, dropout=0.1):
         """
         Args:
             n_feats (int): number of input features.
@@ -38,10 +35,10 @@ class DeepSpeech2(nn.Module):
             nn.ReLU(),
         )
 
-        self.rnn = nn.GRU(input_size=512, hidden_size=512, num_layers=5, bidirectional=False, dropout=dropout, batch_first=True)
+        self.rnn = nn.GRU(input_size=512, hidden_size=512, num_layers=5, bidirectional=True, dropout=dropout, batch_first=True)
 
         self.head = Sequential(
-            nn.Linear(in_features=1 * 512, out_features=n_tokens),
+            nn.Linear(in_features=2 * 512, out_features=n_tokens),
         )
 
     def forward(self, spectrogram, spectrogram_length, **batch):
@@ -55,21 +52,14 @@ class DeepSpeech2(nn.Module):
             output (dict): output dict containing log_probs and
                 transformed lengths.
         """
-        # print(spectrogram.transpose(1, 2).shape)
-        # print('SQQUEEEEEEEEEEEEEEEEEEEEEEEZE')
-        # print(spectrogram.transpose(1, 2).unsqueeze(1).shape)
+
         output = self.net(spectrogram.transpose(1, 2).unsqueeze(1)).transpose(1, 2).reshape(spectrogram.shape[0], -1, 16 * 96)
-        # print(output.shape)
 
         output = self.lin(output)
 
         output = self.rnn(output)[0]
-        # print(output.shape)
 
         output = self.head(output)
-        # print(output.shape)
-
-        # print(output[:, :10, :])
 
         log_probs = nn.functional.log_softmax(output, dim=-1)
         log_probs_length = self.transform_input_lengths(spectrogram_length)

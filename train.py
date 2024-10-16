@@ -23,8 +23,6 @@ def main(config):
         config (DictConfig): hydra experiment config.
     """
     set_random_seed(config.trainer.seed)
-    print(torch.cuda.is_available())
-    # print(torch.cuda.get_device_name())
 
     project_config = OmegaConf.to_container(config)
     logger = setup_saving_and_logging(config)
@@ -39,7 +37,6 @@ def main(config):
 
     # setup data_loader instances
     # batch_transforms should be put on device
-    print(device)
     dataloaders, batch_transforms = get_dataloaders(config, text_encoder, device)
 
     # build model architecture, then print to console
@@ -65,11 +62,7 @@ def main(config):
     optimizer = instantiate(config.optimizer, params=trainable_params)
     if epoch_len is None:
         config.lr_scheduler['steps_per_epoch'] = len(dataloaders['train'])
-        print(config.lr_scheduler)
-    for d in dataloaders:
-        print(len(dataloaders[d]))
-    print(type(config.trainer['epoch_len']))
-    print(config.lr_scheduler)
+
     lr_scheduler = instantiate(config.lr_scheduler, optimizer=optimizer)
 
     # epoch_len = number of iterations for iteration-based training

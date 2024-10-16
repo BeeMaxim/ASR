@@ -113,21 +113,15 @@ class CTCTextEncoder:
                     lm=self.lm_model,
                     beam_size_token=None,
                     beam_threshold=500000,
-                    nbest=5,
+                    nbest=1,
                     beam_size=25,
+                    lm_weight=0.5,
                     sil_token=' ',
                     blank_token=self.EMPTY_TOK,
                     log_add=True
                 )
 
-                #print('decoder created')
-                #print(log_probs.unsqueeze(0).shape)
-                print(log_probs.unsqueeze(0).shape)
-                res = beam_search_decoder(log_probs.unsqueeze(0))
-                #print(res)
-                print(beam_search_decoder.idxs_to_tokens(res[0][0].tokens))
-                print(res)
-                print(self.decode(res[0][0].tokens))
+                res = beam_search_decoder(log_probs.cpu().unsqueeze(0))
                 return self.decode(res[0][0].tokens)
                 
             dp = {
@@ -136,19 +130,9 @@ class CTCTextEncoder:
             for prob in log_probs.cpu().exp().numpy():
                 dp = self.expand_and_merge(dp, prob)
                 dp = self.truncate_paths(dp, 25, False, lm_model)
-                # print(dp)
-                # print(dp)
-            # print(self.truncate_paths(dp, 1))
-            # print(dp)
-            print('beam-search', list(self.truncate_paths(dp, 1, lm, lm_model).keys())[0][0])
+           
             return list(self.truncate_paths(dp, 1, lm, lm_model).keys())[0][0]
             
-            #decoder = ctc_decoder(lexicon=None, tokens=self.vocab, beam_size=50, blank_token='', sil_token='z')
-            # result = decoder(log_probs.unsqueeze(0).cpu())[0][0]
-            
-            # print(result.tokens)
-
-            # return self.decode(result.tokens)
         last = -1
         tokens = []
         inds = torch.argmax(log_probs.cpu(), dim=-1).numpy()
@@ -156,9 +140,7 @@ class CTCTextEncoder:
             if token != last and token != self.EMPTY_TOK:
                 tokens.append(token)
             last = token
-        #print('inds!!!')
-        #print(self.decode(tokens))
-        print('val!', tokens, self.decode(tokens))
+       
         return self.decode(tokens)
 
     @staticmethod

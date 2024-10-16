@@ -23,7 +23,7 @@ class ArgmaxWERMetric(BaseMetric):
         self, log_probs: Tensor, log_probs_length: Tensor, text: List[str], **kwargs
     ):
         wers = []
-        # predictions = torch.argmax(log_probs.cpu(), dim=-1).numpy()
+
         lengths = log_probs_length.detach().numpy()
         for log_prob_vec, length, target_text in zip(log_probs, lengths, text):
             target_text = self.text_encoder.normalize_text(target_text)
@@ -41,17 +41,10 @@ class BeamSearchWERMetric(BaseMetric):
         self, log_probs: Tensor, log_probs_length: Tensor, text: List[str], **kwargs
     ):
         wers = []
-        # predictions = torch.argmax(log_probs.cpu(), dim=-1).numpy()
-        #print('HAHAHA')
-        #print(predictions.shape)
         lengths = log_probs_length.detach().numpy()
-        #print(lengths)
         for log_prob_vec, length, target_text in zip(log_probs, lengths, text):
             target_text = self.text_encoder.normalize_text(target_text)
             pred_text = self.text_encoder.ctc_decode(log_prob_vec[:length, :], beam_search=True)
-            #print("WTF!!!")
-            #print(target_text)
-            #print(pred_text)
             wers.append(calc_wer(target_text, pred_text))
         return sum(wers) / len(wers)
 
@@ -67,17 +60,10 @@ class LMBeamSearchWERMetric(BaseMetric):
         lm_files = download_pretrained_files("librispeech-4-gram")
         lm_model = kenlm.Model(lm_files.lm)
         wers = []
-        # predictions = torch.argmax(log_probs.cpu(), dim=-1).numpy()
-        #print('HAHAHA')
-        #print(predictions.shape)
         lengths = log_probs_length.detach().numpy()
-        #print(lengths)
         for log_prob_vec, length, target_text in zip(log_probs, lengths, text):
             target_text = self.text_encoder.normalize_text(target_text)
             pred_text = self.text_encoder.ctc_decode(log_prob_vec[:length, :], beam_search=True, lm=True, lm_model=lm_model)
-            #print("WTF!!!")
-            #print(target_text)
-            #print(pred_text)
             wers.append(calc_wer(target_text, pred_text))
         return sum(wers) / len(wers)
 
