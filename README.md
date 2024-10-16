@@ -50,3 +50,5 @@ To run inference (evaluate the model or save predictions):
 ```bash
 python3 inference.py HYDRA_CONFIG_ARGUMENTS
 ```
+
+Веса: https://disk.yandex.ru/d/0ucsV55SnMIvpw
